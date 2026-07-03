@@ -86,11 +86,13 @@
   .clock .sec{font-size:.42em;color:#5fb0e6;vertical-align:.42em;margin-left:.12em}
   .date{font-family:var(--ko);font-size:clamp(11px,1.3vw,13px);color:#41506e;text-shadow:2px 2px 0 #fff}
 
-  .row{display:grid;grid-template-columns:repeat(2,1fr);grid-template-rows:1.5fr 1fr;gap:clamp(10px,1.3vw,16px);flex:1 1 0;min-height:0;overflow:hidden}
-  .row>section:nth-child(1){order:1}  /* 일정 */
-  .row>section:nth-child(2){order:3}  /* 할일 → 아래 왼쪽 */
-  .row>section:nth-child(3){order:2}  /* 출결 → 위 오른쪽 */
-  .row>section:nth-child(4){order:4}  /* 시간표 → 아래 오른쪽 */
+  .row{display:grid;grid-template-columns:repeat(2,1fr);gap:clamp(10px,1.3vw,16px);flex:1 1 0;min-height:0;overflow:hidden}
+  .col{display:flex;flex-direction:column;gap:clamp(10px,1.3vw,16px);min-height:0}
+  .col>section{min-height:0}
+  .colL>section:nth-child(1){flex:1.9 1 0}  /* 일정 크게 */
+  .colL>section:nth-child(2){flex:1 1 0}    /* 할일 작게 */
+  .colR>section:nth-child(1){flex:1.05 1 0} /* 출결 */
+  .colR>section:nth-child(2){flex:1 1 0}    /* 시간표: 원래 크기 */
   .win{background:rgba(247,251,255,0.62);border:4px solid rgba(188,216,238,0.85);border-radius:var(--r);box-shadow:var(--sh);padding:11px 12px;display:flex;flex-direction:column;position:relative;min-height:0;overflow:hidden;backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px)}
   .win-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;border-bottom:3px dashed var(--line);padding-bottom:6px;flex:0 0 auto}
   .win-title{font-family:var(--ko-lg);font-size:15px;color:var(--head-ink);letter-spacing:.04em;display:flex;align-items:center;gap:8px}
@@ -124,8 +126,8 @@
   .cell.today.sun .dn,.cell.today.sat .dn{color:#5a4110}
   .cell.selected{box-shadow:inset 0 0 0 3px var(--sel)}
   .cell.today.selected{box-shadow:0 0 0 2px var(--gold-dk),inset 0 0 0 3px var(--sel)}
-  .cell .evmore{position:absolute;top:1px;right:2px;font-family:var(--ko);font-size:8.5px;line-height:1;padding:2px 4px;border-radius:6px;background:var(--head);color:var(--head-ink);font-weight:700}
-  .cell .evbar{width:100%;font-family:var(--ko);font-size:9px;line-height:1.12;padding:0 2px;border-radius:2px;background:linear-gradient(transparent 40%,#fff176 40%,#ffe066 100%);color:#3a2a10;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:left;box-sizing:border-box;flex:0 0 auto}
+  .cell .evmore{position:absolute;top:2px;right:3px;font-family:var(--ko);font-size:10px;line-height:1;padding:2px 4px;border-radius:6px;background:var(--head);color:var(--head-ink);font-weight:700}
+  .cell .evbar{width:100%;font-family:var(--ko);font-size:10.5px;line-height:1.2;padding:1px 3px;border-radius:2px;background:linear-gradient(transparent 40%,#fff176 40%,#ffe066 100%);color:#3a2a10;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:left;box-sizing:border-box;flex:0 0 auto}
   .cell.muted .evbar{opacity:.5}
   .cell.att::before{content:"";position:absolute;top:3px;right:4px;width:5px;height:5px;background:var(--st1);border-radius:50%}
   .cell.today.att::before{background:#5a4110}
@@ -134,7 +136,7 @@
   .day-row{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:6px;flex:0 0 auto}
   .ev-add{display:none;gap:7px;margin-bottom:9px}
   .ev-add.show{display:flex}
-  .ev-list{display:grid;grid-template-columns:repeat(3,1fr);grid-auto-rows:minmax(28px,1fr);gap:5px;flex:1 1 auto;min-height:0;overflow:hidden;align-content:start;max-height:100%}
+  .ev-list{display:grid;grid-template-columns:repeat(3,1fr);grid-auto-rows:minmax(28px,1fr);gap:5px;flex:1 1 auto;min-height:0;overflow:hidden;align-content:start;;max-height:62px}
   .ev{display:flex;align-items:center;gap:4px;font-size:12px;background:#f3f9fe;padding:5px 7px;border-radius:var(--r-xs);box-shadow:inset 0 0 0 2px var(--line);min-width:0;overflow:hidden}
   .ev span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;line-height:1.3}
   .ev button{background:none;border:none;color:var(--ink-dim);cursor:pointer;font-size:11px;opacity:0;transition:.1s;flex:0 0 auto;padding:0 2px}
@@ -196,7 +198,7 @@
   /* 시간표 */
   .tt{width:100%}
   .tt-grid{display:grid;grid-template-columns:30px repeat(5,1fr);grid-auto-rows:1fr;gap:2px;flex:1 1 auto;min-height:0}
-  .tt-grid .h{font-family:var(--ko);font-size:11px;text-align:center;padding:3px 0;background:rgba(194,221,242,.85);color:var(--head-ink);border-radius:var(--r-xs);font-weight:700}
+  .tt-grid .h{font-family:var(--ko);font-size:11px;text-align:center;padding:4px 0;background:rgba(194,221,242,.85);color:var(--head-ink);border-radius:var(--r-xs);font-weight:700}
   .tt-grid .p{font-family:var(--ko);font-size:10px;text-align:center;padding:2px 0;background:rgba(220,235,247,.82);color:var(--head-ink);border-radius:var(--r-xs);display:flex;align-items:center;justify-content:center}
   .tt-cell{font-family:var(--ko);font-size:12px;text-align:center;padding:3px 1px;background:rgba(246,251,255,.72);color:var(--ink);border-radius:var(--r-xs);box-shadow:inset 0 0 0 2px var(--line);cursor:text;min-height:0;outline:none;display:flex;align-items:center;justify-content:center}
   .tt-cell:focus{box-shadow:inset 0 0 0 2px var(--st3);background:#fff}
@@ -313,8 +315,8 @@
   </header>
 
   <div class="row">
-    <!-- 일정 -->
-    <section class="win" aria-label="일정">
+    <div class="col colL">
+<section class="win" aria-label="일정">
       <div class="win-head">
         <div class="win-title"><span class="star">◆</span>일정</div>
         <div class="cal-nav">
@@ -334,9 +336,7 @@
         <div class="ev-list" id="evList"></div>
       </div>
     </section>
-
-    <!-- 할일 -->
-    <section class="win" aria-label="할일">
+<section class="win" aria-label="할일">
       <div class="win-head">
         <div class="win-title"><span class="star">◆</span>할일</div>
         <div class="win-sub" id="todoCount">0개</div>
@@ -351,9 +351,9 @@
         <button class="pbtn mini" id="todoAdd" aria-label="할일 추가">＋</button>
       </div>
     </section>
-
-    <!-- 출결 -->
-    <section class="win" aria-label="출결">
+    </div>
+    <div class="col colR">
+<section class="win" aria-label="출결">
       <div class="win-head">
         <div class="win-title"><span class="star">◆</span>출결
           <button class="tool-btn" id="attHide" title="출결 가리기/보이기">👁</button>
@@ -372,9 +372,7 @@
       </div>
       <div class="att-log" id="attLog"></div>
     </section>
-
-    <!-- 시간표 -->
-    <section class="win tt" aria-label="시간표">
+<section class="win tt" aria-label="시간표">
       <div class="win-head">
         <div class="win-title"><span class="star">◆</span>시간표</div>
         <div class="tt-tabs" id="ttTabs">
@@ -387,6 +385,7 @@
       </div>
       <div class="tt-grid" id="ttGrid"></div>
     </section>
+    </div>
   </div>
 </div>
 
@@ -442,7 +441,7 @@
 </div>
 <button class="yt-launch" id="ytLaunch">YOUTUBE</button>
 
-<div style="position:fixed;left:8px;bottom:6px;z-index:1;font-family:monospace;font-size:10px;color:rgba(60,80,110,.4);pointer-events:none">v13</div>
+<div style="position:fixed;left:8px;bottom:6px;z-index:1;font-family:monospace;font-size:10px;color:rgba(60,80,110,.4);pointer-events:none">v15</div>
 <div class="startbar"><button id="startPress">▶ PRESS START</button></div>
 
 <script>
