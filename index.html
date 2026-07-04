@@ -259,6 +259,14 @@
   .cat-pick{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:13px}
   .cp{font-family:var(--ko);font-size:11px;padding:8px 0;border:none;cursor:pointer;border-radius:var(--r-xs);background:#eef4fa;color:var(--ink);box-shadow:inset 0 0 0 2px var(--line);transition:.08s}
   .cp.sel{background:var(--head);color:var(--head-ink);box-shadow:0 0 0 2px #7ba6cc;font-weight:700;transform:translateY(-1px)}
+  /* 초기화 감지 배너 */
+  .wipe-banner{display:none;position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:60;
+    background:#fff4e0;border:3px solid #e8a23a;border-radius:14px;box-shadow:0 0 0 3px #fff,0 10px 30px rgba(120,80,20,.25);
+    padding:12px 16px;align-items:center;gap:12px;max-width:640px;font-family:var(--ko)}
+  .wipe-banner.show{display:flex}
+  .wipe-banner .wb-ico{font-size:20px}
+  .wipe-banner .wb-msg{font-size:12px;color:#6a4a14;line-height:1.7;flex:1}
+  .wipe-banner .pbtn{padding:8px 11px;font-size:12px;white-space:nowrap}
   /* 백업 모달 */
   .bk-modal{width:440px}
   .bk-hint{font-family:var(--ko);font-size:11.5px;color:var(--ink-dim);margin-bottom:9px;line-height:1.7}
@@ -441,7 +449,13 @@
 </div>
 <button class="yt-launch" id="ytLaunch">YOUTUBE</button>
 
-<div style="position:fixed;left:8px;bottom:6px;z-index:1;font-family:monospace;font-size:10px;color:rgba(60,80,110,.4);pointer-events:none">v15</div>
+<div class="wipe-banner" id="wipeBanner">
+  <span class="wb-ico">⚠️</span>
+  <span class="wb-msg"><b>저장된 데이터가 초기화된 것 같아요.</b><br>백업이 있다면 지금 복원하는 게 좋아요. (Lively 설정에서 브라우저 엔진을 WebView2로 바꾸면 재발을 막을 수 있어요)</span>
+  <button class="pbtn" id="wbRestore">📂 백업 복원</button>
+  <button class="pbtn ghost" id="wbClose">닫기</button>
+</div>
+<div style="position:fixed;left:8px;bottom:6px;z-index:1;font-family:monospace;font-size:10px;color:rgba(60,80,110,.4);pointer-events:none">v16</div>
 <div class="startbar"><button id="startPress">▶ PRESS START</button></div>
 
 <script>
@@ -1240,6 +1254,53 @@ launch.addEventListener("click",()=>{yt.style.display="block";launch.style.displ
 
 /* ---------- 백업 내보내기/가져오기 ---------- */
 const BK_KEYS=["events","attendance","roster","todos","timetable","timetableRoom","stuNo","ytLast","attHidden"];
+/* ---------- 저장소 초기화 감지 + IndexedDB 미러 자동복구 ---------- */
+(function(){
+  const DATA_KEYS=["events","attendance","roster","todos"];
+  const hasData=()=>DATA_KEYS.some(k=>{const v=store.get(k,null);return v&&Object.keys(v).length;});
+  // IndexedDB 미러 (localStorage와 별도 저장소)
+  function idb(cb){
+    try{const rq=indexedDB.open("pixelDash",1);
+      rq.onupgradeneeded=()=>rq.result.createObjectStore("kv");
+      rq.onsuccess=()=>cb(rq.result);rq.onerror=()=>{};}catch(e){}
+  }
+  function mirrorSave(){
+    if(!hasData())return;
+    const payload=bkPayload();
+    idb(db=>{try{db.transaction("kv","readwrite").objectStore("kv").put(payload,"mirror");}catch(e){}});
+  }
+  function mirrorLoad(cb){
+    idb(db=>{try{const rq=db.transaction("kv","readonly").objectStore("kv").get("mirror");
+      rq.onsuccess=()=>cb(rq.result||null);rq.onerror=()=>cb(null);}catch(e){cb(null);}});
+  }
+  window.__mirrorSave=mirrorSave;
+  if(!hasData()){
+    // 데이터가 비어 있음: 미러가 있으면 자동 복구
+    mirrorLoad(txt=>{
+      if(!txt)return;
+      try{
+        const data=JSON.parse(txt);
+        if(data._app!=="pixel-dashboard")return;
+        BK_KEYS.forEach(k=>{if(k in data)store.set(k,data[k]);});
+        // 배너로 알려주고 새로고침해 화면 반영
+        sessionStorage.setItem("autoRestored","1");
+        location.reload();
+      }catch(e){}
+    });
+  }
+  if(sessionStorage.getItem("autoRestored")){
+    sessionStorage.removeItem("autoRestored");
+    const b=$("wipeBanner");
+    b.querySelector(".wb-msg").innerHTML="<b>저장 데이터가 사라져서 자동으로 복구했어요! ✅</b><br>재발 방지를 위해 Lively 설정에서 브라우저 엔진을 WebView2로 바꿔보세요.";
+    b.querySelector("#wbRestore").style.display="none";
+    b.classList.add("show");
+    setTimeout(()=>b.classList.remove("show"),15000);
+  }
+  // 주기적으로 미러 갱신 (1분마다 + 시작 시)
+  mirrorSave();setInterval(mirrorSave,60000);
+})();
+$("wbRestore").addEventListener("click",()=>{$("wipeBanner").classList.remove("show");bkOpen("import");});
+$("wbClose").addEventListener("click",()=>$("wipeBanner").classList.remove("show"));
 function bkPayload(){
   const data={_app:"pixel-dashboard",_ver:1,_saved:new Date().toISOString()};
   BK_KEYS.forEach(k=>{const v=store.get(k,undefined);if(v!==undefined)data[k]=v;});
